@@ -40,7 +40,7 @@
   --ease:cubic-bezier(.22,.9,.28,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 body{
   background:var(--bg);color:var(--text);
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
@@ -67,7 +67,7 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 @keyframes float{to{transform:translate3d(4vw,4vh,0) scale(1.12)}}
 
 /* ============ APP SHELL ============ */
-#app{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+#app{position:relative;z-index:2;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
 /* --- HUD --- */
 #hud{flex:0 0 auto;display:none;align-items:center;gap:clamp(12px,1.6vw,26px);
@@ -104,7 +104,12 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 /* --- SCREENS --- */
 #stage{flex:1 1 auto;position:relative;overflow:hidden}
 .screen{position:absolute;inset:0;flex-direction:column;
-  padding:clamp(18px,3vh,44px) clamp(20px,4vw,72px);overflow:hidden}
+  padding:clamp(18px,3vh,44px) clamp(20px,4vw,72px);
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.26) transparent}
+.screen::-webkit-scrollbar{width:11px}
+.screen::-webkit-scrollbar-track{background:transparent}
+.screen::-webkit-scrollbar-thumb{background:rgba(255,255,255,.24);border-radius:99px;border:3px solid transparent;background-clip:content-box}
 .screen:not(.on){display:none!important}
 .screen.on{display:flex!important;animation:enter .55s var(--ease) both}
 @keyframes enter{from{opacity:0;transform:translateY(26px) scale(.985)}to{opacity:1;transform:none}}
@@ -115,6 +120,9 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 
 .center{align-items:center;justify-content:center;text-align:center}
+/* centrado que NO recorta cuando el contenido es mas alto que la pantalla */
+.screen.center{justify-content:flex-start}
+@supports (justify-content:safe center){.center{justify-content:safe center}}
 .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:.72em;letter-spacing:.24em;text-transform:uppercase;
   color:var(--cyan);font-weight:700;padding:7px 16px;border:1px solid rgba(34,211,238,.32);border-radius:99px;
   background:rgba(34,211,238,.07)}
@@ -245,7 +253,7 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 /* --- OPTIONS --- */
 .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.4vw,22px);
   flex:1 1 auto;min-height:0;align-items:stretch;align-content:center;max-height:100%}
-.opts>.opt{max-height:min(46vh,420px)}
+
 .opt{display:flex;flex-direction:column;text-align:left;background:linear-gradient(180deg,var(--surface-2),var(--surface));
   border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(16px,1.9vw,28px);cursor:pointer;
   transition:.28s var(--ease);position:relative;overflow:hidden}
@@ -331,7 +339,22 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 .mt-a{margin-top:auto}
 .wrap-btns{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 
+/* --- INDICADOR DE DESPLAZAMIENTO --- */
+#scrollcue{position:fixed;left:50%;bottom:14px;transform:translate(-50%,16px);z-index:40;
+  display:none;align-items:center;gap:10px;padding:11px 22px;border-radius:99px;
+  background:rgba(8,14,28,.94);border:1px solid var(--line-str);box-shadow:var(--sh);
+  font-size:.85em;font-weight:600;color:var(--cyan);pointer-events:none;opacity:0;
+  transition:opacity .35s var(--ease),transform .35s var(--ease)}
+#scrollcue.on{display:flex;opacity:1;transform:translate(-50%,0)}
+#scrollcue svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round;animation:cuebob 1.6s var(--ease) infinite}
+@keyframes cuebob{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+
 /* --- RESPONSIVE --- */
+/* Kiosco horizontal grande: las tarjetas se limitan para que todo quepa sin scroll */
+@media (min-width:1181px) and (min-height:761px){
+  .opts>.opt{max-height:min(46vh,26rem)}
+}
 @media (max-width:1180px){
   .grid3,.factrow{grid-template-columns:1fr 1fr}
   .impact-grid{grid-template-columns:1fr}
@@ -346,16 +369,110 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
   #kpis .kpi:nth-child(n+3){display:none}
   #stepTxt{display:none}
 }
+/* MODO FLUIDO: cuando la pantalla es angosta o baja, nada se recorta y todo se desplaza */
+@media (max-width:1024px), (max-height:760px){
+  .screen{justify-content:flex-start;padding-bottom:clamp(84px,11vh,120px)}
+  .screen>.stack{height:auto!important;min-height:100%;flex:0 0 auto}
+  .opts,.demo,.impact-grid,.chartwrap,.grid3,.factrow{flex:0 0 auto;min-height:0;overflow:visible}
+  .opts{align-content:start}
+  .opts>.opt{max-height:none}
+  .verdict,.realbox,.demo-panel{overflow:visible}
+  .plot{min-height:210px}
+  .mini{min-height:140px}
+  .quote,.deltas,.demo-rows{margin-top:14px}
+}
+
+/* Una sola columna: celular y tablet vertical */
 @media (max-width:860px){
   .grid3,.opts,.factrow,.demo{grid-template-columns:1fr}
-  .opts{overflow:auto;grid-auto-rows:min-content}
-  .demo{overflow:auto}
-  #kpis .kpi:nth-child(n+2){display:none}
-  .screen{padding:16px}
+  .opts{grid-auto-rows:min-content}
+  .screen{padding:16px 16px 100px}
+  .case-head{gap:12px}
+  .mt-a{margin-top:22px}
 }
+
+/* Celular vertical */
+@media (max-width:620px){
+  body{font-size:15px}
+  #hud{gap:10px;padding:8px 12px;flex-wrap:wrap}
+  .brandmini b{display:none}
+  .hud-sep{display:none}
+  #kpis{order:3;flex:1 1 100%;gap:6px;min-width:100%}
+  #kpis .kpi,#kpis .kpi:nth-child(n+2),#kpis .kpi:nth-child(n+3){display:block!important}
+  .kpi{padding:6px 9px}
+  .kpi .lbl{font-size:.52em;letter-spacing:.02em}
+  .kpi .val{font-size:.92em}
+  .kpi .delta{font-size:.6em;right:5px;bottom:3px;padding:0 5px}
+  .title-xl{font-size:clamp(2.1rem,11.5vw,3.4rem)}
+  .tapcta{padding:18px 30px;width:100%;justify-content:center}
+  .btn{width:100%;justify-content:center;padding:15px 24px}
+  .wrap-btns{flex-direction:column;align-items:stretch}
+  .wrap-btns>div{text-align:center}
+  .bf{grid-template-columns:88px 1fr 38px;gap:10px}
+  .marquee{position:static;margin-top:18px;font-size:.64em;letter-spacing:.1em}
+  .plot{gap:3px;min-height:190px;padding:26px 0 32px}
+  .bar{border-radius:5px 5px 2px 2px}
+  .bar .yv{font-size:.56em;top:-18px}
+  .bar .xl{font-size:.54em;bottom:-22px}
+  .ucl span{font-size:.6em}
+  .tapme{font-size:.66em;letter-spacing:.04em}
+  .ucl span{right:auto;left:0;top:-19px;font-size:.56em;padding:1px 6px}
+  .mline span{right:auto;left:0}
+  .finalgrid{gap:18px}
+  .gaugewrap{width:min(78vw,300px)}
+  .qrbox{flex-direction:column;text-align:center}
+  .ovcard{padding:20px;border-radius:var(--r-lg)}
+  .hint{padding:12px 14px;font-size:.88em}
+  .legend{display:none}
+}
+
+/* Pantallas de poca altura (portatiles con ventana pequena) */
 @media (max-height:620px){
-  .screen{padding:12px 20px}
-  .plot{min-height:110px}
+  .screen{padding:12px 20px 96px}
+  .plot{min-height:170px}
+}
+
+/* Pantalla tactil gigante 65"-86" (4K) */
+@media (min-width:2000px){
+  html{font-size:25px}
+  body{font-size:1rem}
+  .bf{grid-template-columns:clamp(150px,9vw,300px) 1fr clamp(54px,4vw,110px)}
+  .bf .t{height:20px}
+  .screen{padding:clamp(40px,4.5vh,96px) clamp(60px,5vw,180px)}
+  #hud{padding:22px 60px;gap:34px}
+  .brandmini svg{width:56px;height:56px}
+  .hud-sep{height:56px}
+  .iconbtn{width:64px;height:64px}
+  .iconbtn svg{width:29px;height:29px}
+  .kpi{padding:14px 22px;border-radius:16px}
+  .kpi .track{height:9px;margin-top:10px}
+  .dot{width:14px;height:14px}
+  .btn{padding:24px 52px;border-radius:99px}
+  .btn svg{width:28px;height:28px}
+  .tapcta{padding:32px 70px}
+  .handicon{width:38px;height:38px}
+  .opt .letter,.num-chip{width:60px;height:60px;font-size:1.6rem;border-radius:18px}
+  .ico{border-radius:22px}
+  .vbadge{width:78px;height:78px}
+  .vbadge svg{width:40px;height:40px}
+  .finalgrid{max-width:2400px}
+  .gaugewrap{width:clamp(320px,20vw,520px)}
+  .plot{min-height:340px;padding:34px 0 52px}
+  .bar{border-radius:14px 14px 5px 5px}
+  .bar .mark{width:44px;height:44px;font-size:1.6rem;top:-70px}
+  .mini{min-height:220px}
+  #scrollcue{padding:18px 34px;bottom:26px}
+  .ovcard{max-width:1600px}
+}
+@media (min-width:3200px){
+  html{font-size:34px}
+  .screen{padding:120px 240px}
+  #hud{padding:30px 90px}
+  .iconbtn{width:84px;height:84px}
+  .iconbtn svg{width:38px;height:38px}
+  .brandmini svg{width:74px;height:74px}
+  .dot{width:18px;height:18px}
+  .plot{min-height:460px}
 }
 </style>
 </head>
@@ -665,6 +782,10 @@ button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 <!-- ================= OVERLAY AYUDA ================= -->
 <div id="ov"><div class="ovcard" id="ovCard"></div></div>
 <div id="toast"></div>
+<div id="scrollcue" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+  Desliza para ver más
+</div>
 <canvas id="conf"></canvas>
 
 <script>
@@ -898,7 +1019,33 @@ function go(id){
   $('#hud').classList.toggle('on', id!=='s-attract');
   beep('swipe');
   resetIdle();
+  syncCue();
 }
+
+/* ---------- INDICADOR DE DESPLAZAMIENTO ---------- */
+function syncCue(){
+  const cue=document.getElementById('scrollcue');
+  if(!cue) return;
+  const el=document.getElementById(current);
+  if(!el){cue.classList.remove('on');return}
+  const overflow = el.scrollHeight - el.clientHeight;
+  const atBottom = el.scrollTop >= overflow - 24;
+  cue.classList.toggle('on', overflow > 28 && !atBottom);
+}
+function watchCue(){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.addEventListener('scroll',syncCue,{passive:true});
+  });
+  addEventListener('resize',()=>setTimeout(syncCue,120));
+  addEventListener('orientationchange',()=>setTimeout(syncCue,320));
+  if(window.ResizeObserver){
+    const ro=new ResizeObserver(()=>syncCue());
+    document.querySelectorAll('.screen').forEach(s=>ro.observe(s));
+  }
+  setTimeout(syncCue,600);
+  setInterval(syncCue,900);
+}
+watchCue();
 
 /* ---------- TOAST ---------- */
 let toastT;

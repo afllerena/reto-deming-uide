@@ -79,6 +79,22 @@ Abre la URL en cualquier navegador y toca la pantalla inicial: la app entra en p
 
 ---
 
+## Pantallas compatibles
+
+La app se adapta automáticamente a cada tamaño:
+
+| Dispositivo | Comportamiento |
+|---|---|
+| Celular vertical | Una sola columna, los 4 indicadores en una fila propia, desplazamiento con la señal "Desliza para ver más" |
+| Tablet 10" | Diseño de dos columnas, la mayoría de pantallas caben completas |
+| Portátil | Se ajusta también con ventanas de poca altura |
+| Kiosco 1920×1080 | Todo cabe sin desplazamiento, que es el modo ideal para el evento |
+| Pantalla táctil 65"–86" (4K) | Tipografía, botones y gráfico escalan para verse desde lejos |
+
+Cuando el contenido no cabe, la pantalla se desplaza con el dedo y aparece un aviso flotante indicándolo. En el kiosco de 1920×1080 o más nunca hace falta desplazar.
+
+---
+
 ## Uso durante el evento
 
 - La app se **reinicia sola** tras 2 minutos sin actividad, lista para el siguiente visitante.
