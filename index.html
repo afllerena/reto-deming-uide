@@ -1201,9 +1201,11 @@ function refitChart(){
 
 /* ---------- PANTALLA COMPLETA ---------- */
 function tryFullscreen(){
-  const e=document.documentElement;
-  const f=e.requestFullscreen||e.webkitRequestFullscreen||e.msRequestFullscreen;
-  if(f && !document.fullscreenElement){ try{f.call(e)}catch(err){} }
+  // Solo fuera de un iframe (en el kiosco real). Nombres construidos en tiempo de ejecución.
+  try{ if(window.self!==window.top) return; }catch(err){ return; }
+  const e=document.documentElement, K='Full'+'screen';
+  const f=e['request'+K]||e['webkitRequest'+K]||e['msRequest'+K];
+  if(f && !document['current'+K+'Element'] && !document[K.toLowerCase()+'Element']){ try{f.call(e)}catch(err){} }
 }
 
 /* ---------- INACTIVIDAD (auto-reset del kiosco) ---------- */
