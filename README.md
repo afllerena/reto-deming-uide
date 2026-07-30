@@ -79,6 +79,20 @@ Abre la URL en cualquier navegador y toca la pantalla inicial: la app entra en p
 
 ---
 
+## Identidad institucional
+
+La aplicación usa el logotipo oficial de la UIDE (tomado de uide.edu.ec) y su paleta corporativa:
+
+| Color | Código | Uso |
+|---|---|---|
+| Vino tinto UIDE | `#910047` | Color estructural, fondos y degradados |
+| Oro UIDE | `#EAAA01` | Acento principal: botones, títulos, datos destacados |
+| Oro claro | `#FFD166` | Acento secundario |
+
+El logotipo se muestra sobre una placa blanca, tal como exige el uso correcto de marca sobre fondos oscuros. Los colores funcionales (verde para mejora, rojo para alerta) se mantienen aparte para no confundir la lectura de los datos.
+
+---
+
 ## Pantallas compatibles
 
 La app se adapta automáticamente a cada tamaño:
