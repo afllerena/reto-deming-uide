@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Reto Deming · Automotive Legends UIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#04070F;
+  --bg-2:#080E1D;
+  --surface:#0D1628;
+  --surface-2:#121F38;
+  --line:rgba(255,255,255,.10);
+  --line-str:rgba(255,255,255,.20);
+  --text:#EEF3FF;
+  --muted:#94A3C0;
+  --dim:#6B7A99;
+
+  --uide:#0B5FFF;
+  --cyan:#22D3EE;
+  --gold:#FFB703;
+  --green:#2ED47A;
+  --red:#FF5C6C;
+  --violet:#8B5CF6;
+
+  --r-sm:10px; --r:16px; --r-lg:24px; --r-xl:34px;
+  --sh:0 24px 60px -20px rgba(0,0,0,.8);
+  --ease:cubic-bezier(.22,.9,.28,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:clamp(15px,1.15vw,19px);line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  user-select:none;
+  overscroll-behavior:none;
+}
+h1,h2,h3,.dsp{font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-.02em;line-height:1.06}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+
+/* ============ BACKDROP ============ */
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:
+  radial-gradient(1200px 800px at 12% -10%, rgba(11,95,255,.28), transparent 62%),
+  radial-gradient(1000px 700px at 92% 8%, rgba(34,211,238,.16), transparent 60%),
+  radial-gradient(900px 900px at 50% 120%, rgba(139,92,246,.16), transparent 62%),
+  var(--bg)}
+#bg:before{content:"";position:absolute;inset:-2px;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:72px 72px;mask-image:radial-gradient(circle at 50% 40%,#000 25%,transparent 78%)}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:float 18s var(--ease) infinite alternate}
+.orb.a{width:46vw;height:46vw;left:-10vw;top:-14vw;background:rgba(11,95,255,.55)}
+.orb.b{width:38vw;height:38vw;right:-8vw;bottom:-12vw;background:rgba(34,211,238,.30);animation-duration:23s}
+@keyframes float{to{transform:translate3d(4vw,4vh,0) scale(1.12)}}
+
+/* ============ APP SHELL ============ */
+#app{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+
+/* --- HUD --- */
+#hud{flex:0 0 auto;display:none;align-items:center;gap:clamp(12px,1.6vw,26px);
+  padding:clamp(10px,1.3vh,18px) clamp(16px,2.4vw,42px);
+  background:rgba(6,11,22,.72);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
+#hud.on{display:flex}
+.brandmini{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.brandmini svg{width:34px;height:34px}
+.brandmini b{font-family:'Space Grotesk';font-size:.82em;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;line-height:1.15}
+.hud-sep{width:1px;height:34px;background:var(--line)}
+#kpis{display:flex;gap:clamp(8px,1.2vw,20px);flex:1 1 auto;min-width:0}
+.kpi{flex:1 1 0;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:8px clamp(8px,.9vw,14px);position:relative;overflow:hidden;transition:.3s var(--ease)}
+.kpi.pulse{border-color:var(--line-str);transform:translateY(-3px);box-shadow:0 10px 26px -12px rgba(0,0,0,.9)}
+.kpi .n{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.kpi .lbl{font-size:.66em;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .val{font-family:'Space Grotesk';font-weight:700;font-size:1.02em;font-variant-numeric:tabular-nums}
+.kpi .track{height:5px;border-radius:99px;background:rgba(255,255,255,.09);margin-top:6px;overflow:hidden}
+.kpi .fill{height:100%;border-radius:99px;transition:width .9s var(--ease),background .4s}
+.kpi .delta{position:absolute;right:7px;bottom:4px;font-size:.7em;font-weight:700;opacity:0;transform:translateY(6px);
+  transition:.4s var(--ease);background:rgba(4,7,15,.92);padding:1px 7px;border-radius:6px;line-height:1.35}
+.kpi .delta.show{opacity:1;transform:translateY(0)}
+#steps{flex:0 0 auto;display:flex;align-items:center;gap:14px}
+.dots{display:flex;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18);transition:.4s var(--ease)}
+.dot.done{background:var(--green)}
+.dot.now{background:var(--cyan);transform:scale(1.5);box-shadow:0 0 0 5px rgba(34,211,238,.14)}
+#stepTxt{font-size:.72em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+.iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;
+  background:var(--surface);transition:.25s var(--ease);flex:0 0 auto}
+.iconbtn:active{transform:scale(.9);border-color:var(--cyan)}
+.iconbtn svg{width:19px;height:19px;stroke:var(--muted);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* --- SCREENS --- */
+#stage{flex:1 1 auto;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;flex-direction:column;
+  padding:clamp(18px,3vh,44px) clamp(20px,4vw,72px);overflow:hidden}
+.screen:not(.on){display:none!important}
+.screen.on{display:flex!important;animation:enter .55s var(--ease) both}
+@keyframes enter{from{opacity:0;transform:translateY(26px) scale(.985)}to{opacity:1;transform:none}}
+.stack>*{animation:rise .6s var(--ease) both}
+.stack>*:nth-child(1){animation-delay:.05s}.stack>*:nth-child(2){animation-delay:.12s}
+.stack>*:nth-child(3){animation-delay:.19s}.stack>*:nth-child(4){animation-delay:.26s}
+.stack>*:nth-child(5){animation-delay:.33s}.stack>*:nth-child(6){animation-delay:.4s}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+.center{align-items:center;justify-content:center;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:.72em;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--cyan);font-weight:700;padding:7px 16px;border:1px solid rgba(34,211,238,.32);border-radius:99px;
+  background:rgba(34,211,238,.07)}
+.eyebrow .pip{width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* --- ATTRACT --- */
+#s-attract{cursor:pointer}
+.logo-big{width:clamp(96px,11vw,150px);height:auto;filter:drop-shadow(0 12px 40px rgba(34,211,238,.35))}
+.title-xl{font-size:clamp(2.6rem,7.2vw,6.4rem);font-weight:700;letter-spacing:-.035em}
+.title-xl .g{background:linear-gradient(100deg,#fff 8%,var(--cyan) 42%,var(--uide) 88%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);font-size:clamp(1rem,1.55vw,1.4rem);max-width:60ch}
+.spotbadge{font-family:'Space Grotesk';font-weight:600;letter-spacing:.3em;text-transform:uppercase;font-size:.78em;color:var(--gold)}
+.tapcta{margin-top:6px;display:inline-flex;align-items:center;gap:16px;padding:20px 42px;border-radius:99px;
+  background:linear-gradient(100deg,var(--uide),var(--cyan));color:#03101F;font-weight:700;
+  font-family:'Space Grotesk';font-size:clamp(1.05rem,1.7vw,1.5rem);letter-spacing:.02em;
+  box-shadow:0 0 0 0 rgba(34,211,238,.5);animation:pulseR 2.4s infinite}
+@keyframes pulseR{0%{box-shadow:0 0 0 0 rgba(34,211,238,.42)}70%{box-shadow:0 0 0 30px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+.handicon{width:26px;height:26px;animation:tapAnim 2.4s var(--ease) infinite}
+@keyframes tapAnim{0%,100%{transform:translateY(0)}40%{transform:translateY(-9px)}55%{transform:translateY(0)}}
+.marquee{position:absolute;bottom:clamp(14px,2.4vh,28px);left:0;right:0;text-align:center;color:var(--dim);
+  font-size:.78em;letter-spacing:.22em;text-transform:uppercase}
+
+/* --- CARDS / GRIDS --- */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.5vw,24px);width:100%}
+.card{background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:clamp(16px,2vw,30px);position:relative;overflow:hidden;
+  transition:.3s var(--ease)}
+.card.tap{cursor:pointer}
+.card.tap:active{transform:scale(.975)}
+.card.tap:hover{border-color:var(--line-str);transform:translateY(-5px);box-shadow:var(--sh)}
+.card .glow{position:absolute;inset:auto -30% -60% -30%;height:150px;border-radius:50%;filter:blur(52px);opacity:.35;pointer-events:none}
+.num-chip{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-family:'Space Grotesk';
+  font-weight:700;background:rgba(34,211,238,.13);color:var(--cyan);border:1px solid rgba(34,211,238,.28);font-size:1rem}
+.card h3{font-size:clamp(1.05rem,1.5vw,1.45rem);font-weight:600;margin:14px 0 8px}
+.card p{color:var(--muted);font-size:.92em}
+.ico{width:clamp(42px,3.6vw,58px);height:clamp(42px,3.6vw,58px);border-radius:16px;display:grid;place-items:center;
+  background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.ico svg{width:56%;height:56%;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* --- BUTTONS --- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:16px 34px;border-radius:99px;
+  font-family:'Space Grotesk';font-weight:600;font-size:clamp(.95rem,1.25vw,1.2rem);transition:.22s var(--ease);
+  border:1px solid transparent;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn-p{background:linear-gradient(100deg,var(--uide),var(--cyan));color:#03101F;box-shadow:0 14px 34px -14px rgba(34,211,238,.7)}
+.btn-g{background:rgba(255,255,255,.06);border-color:var(--line-str);color:var(--text)}
+.btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* --- HINT BAR --- */
+.hint{display:flex;align-items:center;gap:14px;padding:14px 22px;border-radius:var(--r);
+  background:linear-gradient(100deg,rgba(255,183,3,.14),rgba(255,183,3,.04));
+  border:1px solid rgba(255,183,3,.30);color:#FFE0A3;font-weight:500;font-size:.95em}
+.hint .bulb{width:30px;height:30px;flex:0 0 auto;border-radius:50%;background:rgba(255,183,3,.2);display:grid;place-items:center;animation:blink 2s infinite}
+.hint .bulb svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:2}
+.hint b{color:#fff}
+
+/* --- DEMO (pantalla de instrucciones) --- */
+.demo{display:grid;grid-template-columns:1.35fr 1fr;gap:clamp(12px,1.5vw,24px);flex:1 1 auto;min-height:0}
+.demo-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:clamp(14px,1.8vw,26px);display:flex;flex-direction:column;gap:12px;min-height:0}
+.dl-t{font-size:.7em;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.mini{position:relative;flex:1 1 auto;display:flex;align-items:flex-end;gap:clamp(6px,.9vw,14px);min-height:110px;padding-bottom:4px}
+.mb{flex:1 1 0;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,rgba(34,211,238,.75),rgba(11,95,255,.45))}
+.mb.red{background:linear-gradient(180deg,var(--red),rgba(255,92,108,.4));animation:hotpulse 1.9s infinite}
+.mline{position:absolute;left:0;right:0;bottom:46%;border-top:2px dashed rgba(255,92,108,.7)}
+.mline span{position:absolute;right:0;top:-19px;font-size:.66em;color:var(--red);font-weight:700}
+.hand{position:absolute;left:calc(64% - 17px);bottom:14%;width:34px;height:34px;pointer-events:none;
+  animation:tapdemo 2.8s var(--ease) infinite}
+.hand svg{width:100%;height:100%;fill:none;stroke:#fff;stroke-width:1.8;filter:drop-shadow(0 3px 8px rgba(0,0,0,.8))}
+.hand:after{content:"";position:absolute;left:50%;top:6px;width:34px;height:34px;margin-left:-17px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.7);animation:ripple 2.8s var(--ease) infinite}
+@keyframes tapdemo{0%,55%{transform:translateY(-14px)}68%{transform:translateY(0)}80%,100%{transform:translateY(-14px)}}
+@keyframes ripple{0%,60%{opacity:0;transform:scale(.3)}70%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(1.9)}}
+.demo-rows{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.demo-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 14px;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:.9em;color:var(--muted)}
+.demo-row b{font-family:'Space Grotesk';font-size:1.02em}
+
+/* --- CASE LAYOUT --- */
+.case-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.case-title{font-size:clamp(1.7rem,3.4vw,3.1rem);font-weight:700}
+.tag{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;font-size:.72em;
+  font-weight:700;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line-str);color:var(--muted)}
+.tag.gold{color:var(--gold);border-color:rgba(255,183,3,.35);background:rgba(255,183,3,.08)}
+.lead{color:var(--muted);font-size:clamp(.98rem,1.35vw,1.22rem);max-width:88ch}
+.factrow{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.3vw,20px)}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(12px,1.5vw,22px)}
+.fact .k{font-family:'Space Grotesk';font-weight:700;font-size:clamp(1.5rem,3vw,2.6rem);line-height:1;
+  background:linear-gradient(100deg,#fff,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.fact .d{color:var(--dim);font-size:.82em;margin-top:8px;line-height:1.35}
+
+/* --- CHART (control chart) --- */
+.chartwrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:clamp(14px,1.8vw,26px);position:relative;flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+.chart-top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+.chart-t{font-family:'Space Grotesk';font-weight:600;font-size:1.02em}
+.legend{display:flex;gap:16px;font-size:.76em;color:var(--dim)}
+.legend i{display:inline-block;width:16px;height:0;border-top:2px dashed var(--red);vertical-align:middle;margin-right:6px}
+.plot{position:relative;flex:1 1 auto;display:flex;align-items:flex-end;gap:clamp(5px,.8vw,14px);
+  padding:22px 0 34px;min-height:150px}
+.ucl{position:absolute;left:0;right:0;border-top:2px dashed rgba(255,92,108,.75);pointer-events:none}
+.ucl span{position:absolute;right:0;top:-24px;font-size:.7em;color:var(--red);font-weight:700;letter-spacing:.06em;
+  background:rgba(255,92,108,.12);padding:2px 9px;border-radius:6px;border:1px solid rgba(255,92,108,.3)}
+.bar{flex:1 1 0;position:relative;border-radius:8px 8px 3px 3px;cursor:pointer;
+  background:linear-gradient(180deg,rgba(34,211,238,.85),rgba(11,95,255,.55));
+  transition:height .8s var(--ease),background .3s,transform .2s var(--ease),box-shadow .3s;
+  height:0;min-height:4px}
+.bar:active{transform:scaleY(1.03)}
+.bar .xl{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);font-size:.68em;color:var(--dim);white-space:nowrap}
+.bar .yv{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:.7em;font-weight:700;color:var(--muted);
+  font-variant-numeric:tabular-nums;opacity:0;transition:.4s}
+.plot.ready .bar .yv{opacity:1}
+.bar.hot{background:linear-gradient(180deg,var(--red),rgba(255,92,108,.45));animation:hotpulse 1.9s infinite}
+@keyframes hotpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,92,108,0)}50%{box-shadow:0 0 22px 3px rgba(255,92,108,.45)}}
+.bar.correct{background:linear-gradient(180deg,var(--green),rgba(46,212,122,.4))!important;animation:none;
+  box-shadow:0 0 26px 4px rgba(46,212,122,.4)}
+.bar.wrong{background:linear-gradient(180deg,#5A6478,#3A4356)!important;animation:none}
+.bar .mark{position:absolute;top:-52px;left:50%;transform:translateX(-50%) scale(0);font-size:1.15rem;
+  transition:.4s var(--ease);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800}
+.bar.correct .mark{transform:translateX(-50%) scale(1);background:var(--green);color:#04220F}
+.bar.wrong .mark{transform:translateX(-50%) scale(1);background:#5A6478;color:#0B1220}
+.tapme{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
+  font-size:.76em;color:var(--cyan);font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  animation:bob 2s var(--ease) infinite;pointer-events:none}
+@keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-7px)}}
+
+/* --- OPTIONS --- */
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.4vw,22px);
+  flex:1 1 auto;min-height:0;align-items:stretch;align-content:center;max-height:100%}
+.opts>.opt{max-height:min(46vh,420px)}
+.opt{display:flex;flex-direction:column;text-align:left;background:linear-gradient(180deg,var(--surface-2),var(--surface));
+  border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(16px,1.9vw,28px);cursor:pointer;
+  transition:.28s var(--ease);position:relative;overflow:hidden}
+.opt:hover{border-color:var(--cyan);transform:translateY(-6px);box-shadow:0 26px 60px -26px rgba(34,211,238,.5)}
+.opt:active{transform:scale(.975)}
+.opt .letter{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-family:'Space Grotesk';
+  font-weight:700;font-size:1.1rem;background:rgba(255,255,255,.06);border:1px solid var(--line-str);color:var(--cyan)}
+.opt h4{font-family:'Space Grotesk';font-size:clamp(1rem,1.4vw,1.32rem);font-weight:600;margin:14px 0 10px;line-height:1.22}
+.opt p{color:var(--muted);font-size:.9em;flex:1 1 auto}
+.opt .pick{margin-top:16px;display:flex;align-items:center;gap:9px;font-size:.78em;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);transition:.25s}
+.opt:hover .pick{color:var(--cyan)}
+.opt.dis{opacity:.35;pointer-events:none}
+
+/* --- IMPACT --- */
+.impact-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(14px,1.8vw,28px);flex:1 1 auto;min-height:0;overflow:auto}
+.verdict{border-radius:var(--r-lg);padding:clamp(16px,2vw,30px);border:1px solid var(--line);
+  background:var(--surface);display:flex;flex-direction:column;gap:14px;overflow:auto}
+.vhead{display:flex;align-items:center;gap:14px}
+.vbadge{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto}
+.vbadge svg{width:28px;height:28px;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.vt{font-family:'Space Grotesk';font-size:clamp(1.2rem,2vw,1.9rem);font-weight:700}
+.deltas{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.drow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:11px 15px;border-radius:12px;
+  background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.drow .nm{font-size:.9em;color:var(--muted)}
+.drow .dv{font-family:'Space Grotesk';font-weight:700;font-variant-numeric:tabular-nums;font-size:1.05em}
+.up{color:var(--green)}.down{color:var(--red)}.flat{color:var(--dim)}
+.realbox{border-radius:var(--r-lg);padding:clamp(16px,2vw,30px);border:1px solid rgba(255,183,3,.28);
+  background:linear-gradient(170deg,rgba(255,183,3,.10),rgba(255,183,3,.02));display:flex;flex-direction:column;gap:12px;overflow:auto}
+.realbox .rl{font-size:.72em;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.realbox h4{font-family:'Space Grotesk';font-size:clamp(1.05rem,1.5vw,1.4rem);font-weight:600}
+.realbox p{color:#E4D9BE;font-size:.94em}
+.quote{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,183,3,.22);font-style:italic;color:#FFD98A;font-size:.9em}
+
+/* --- FINAL --- */
+.gaugewrap{position:relative;width:clamp(200px,22vw,320px)}
+.gaugewrap svg{width:100%;height:auto;display:block}
+.gnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:12%}
+.gnum b{font-family:'Space Grotesk';font-size:clamp(2.4rem,5vw,4.2rem);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.gnum span{font-size:.72em;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:6px}
+.rank{font-family:'Space Grotesk';font-size:clamp(1.8rem,4vw,3.4rem);font-weight:700;
+  background:linear-gradient(100deg,var(--gold),#fff 60%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.finalgrid{display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,3vw,52px);align-items:center;width:100%;max-width:1500px}
+.bars-final{display:flex;flex-direction:column;gap:12px}
+.bf{display:grid;grid-template-columns:150px 1fr 54px;align-items:center;gap:14px}
+.bf .n{font-size:.84em;color:var(--muted)}
+.bf .t{display:block;height:12px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bf .f{display:block;height:100%;border-radius:99px;width:0;transition:width 1.2s var(--ease)}
+.bf .v{font-family:'Space Grotesk';font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.cta-final{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.qrbox{display:flex;align-items:center;gap:16px;padding:14px 22px;border-radius:var(--r);
+  border:1px dashed var(--line-str);background:rgba(255,255,255,.03)}
+.qrbox .q{width:64px;height:64px;border-radius:10px;background:#fff;display:grid;place-items:center;flex:0 0 auto}
+.qrbox .q svg{width:48px;height:48px}
+.qrbox b{font-family:'Space Grotesk';display:block;font-size:1em}
+.qrbox small{color:var(--dim);font-size:.82em}
+
+/* --- OVERLAY (ayuda) --- */
+#ov{position:fixed;inset:0;z-index:50;display:none;background:rgba(2,5,12,.82);backdrop-filter:blur(14px);
+  align-items:center;justify-content:center;padding:4vh 5vw}
+#ov.on{display:flex;animation:enter .35s var(--ease) both}
+.ovcard{max-width:1000px;width:100%;background:linear-gradient(180deg,var(--surface-2),var(--surface));
+  border:1px solid var(--line-str);border-radius:var(--r-xl);padding:clamp(22px,3vw,46px);box-shadow:var(--sh);
+  max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:22px}
+
+/* --- TOAST --- */
+#toast{position:fixed;left:50%;bottom:6vh;transform:translate(-50%,30px);z-index:60;opacity:0;pointer-events:none;
+  padding:14px 26px;border-radius:99px;font-weight:600;transition:.4s var(--ease);
+  background:rgba(8,14,28,.95);border:1px solid var(--line-str);box-shadow:var(--sh);font-size:.94em}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast.ok{border-color:rgba(46,212,122,.5);color:#B7F5D2}
+#toast.no{border-color:rgba(255,92,108,.5);color:#FFC7CD}
+
+/* --- CONFETTI --- */
+#conf{position:fixed;inset:0;z-index:45;pointer-events:none}
+
+/* --- SPACING HELPERS --- */
+.gap-s{gap:clamp(10px,1.2vh,16px)}.gap-m{gap:clamp(14px,2vh,26px)}.gap-l{gap:clamp(20px,3vh,40px)}
+.col{display:flex;flex-direction:column}
+.row{display:flex;align-items:center}
+.between{justify-content:space-between}
+.mt-a{margin-top:auto}
+.wrap-btns{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+
+/* --- RESPONSIVE --- */
+@media (max-width:1180px){
+  .grid3,.factrow{grid-template-columns:1fr 1fr}
+  .impact-grid{grid-template-columns:1fr}
+  .finalgrid{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .bf{grid-template-columns:120px 1fr 46px}
+  .opt{padding:14px 16px}
+  .opt h4{margin:10px 0 8px}
+  .kpi .lbl{font-size:.58em;letter-spacing:.04em}
+  #kpis{gap:8px}
+}
+@media (max-width:980px){
+  #kpis .kpi:nth-child(n+3){display:none}
+  #stepTxt{display:none}
+}
+@media (max-width:860px){
+  .grid3,.opts,.factrow,.demo{grid-template-columns:1fr}
+  .opts{overflow:auto;grid-auto-rows:min-content}
+  .demo{overflow:auto}
+  #kpis .kpi:nth-child(n+2){display:none}
+  .screen{padding:16px}
+}
+@media (max-height:620px){
+  .screen{padding:12px 20px}
+  .plot{min-height:110px}
+}
+</style>
+</head>
+<body>
+
+<div id="bg"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div id="app">
+
+  <!-- ================= HUD ================= -->
+  <header id="hud">
+    <div class="brandmini">
+      <svg viewBox="0 0 48 48" aria-label="Automotive Legends UIDE">
+        <circle cx="24" cy="24" r="21" stroke="#22D3EE" stroke-width="2" fill="none" opacity=".55"/>
+        <path d="M10 32 L19 16 L24 26 L29 12 L38 32" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="29" cy="12" r="3.4" fill="#FFB703"/>
+      </svg>
+      <b>Automotive<br>Legends</b>
+    </div>
+    <div class="hud-sep"></div>
+    <div id="kpis"></div>
+    <div class="hud-sep"></div>
+    <div id="steps">
+      <div class="dots" id="dots"></div>
+      <div id="stepTxt">Caso 1 · Paso 1 de 3</div>
+    </div>
+    <button class="iconbtn" id="btnHelp" aria-label="Ayuda">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.7-.9 1.3v.5"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="iconbtn" id="btnSound" aria-label="Sonido">
+      <svg viewBox="0 0 24 24" id="sndIco"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6"/><path d="M18.6 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>
+    </button>
+    <button class="iconbtn" id="btnHome" aria-label="Reiniciar">
+      <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.6 5.9"/><path d="M4 6v5h5"/></svg>
+    </button>
+  </header>
+
+  <!-- ================= STAGE ================= -->
+  <main id="stage">
+
+    <!-- ---------- 1. ATRACCIÓN ---------- -->
+    <section class="screen center gap-m" id="s-attract">
+      <div class="stack col center gap-m" style="align-items:center">
+        <svg class="logo-big" viewBox="0 0 48 48" aria-label="Automotive Legends UIDE">
+          <circle cx="24" cy="24" r="21" stroke="#22D3EE" stroke-width="1.6" fill="none" opacity=".5"/>
+          <circle cx="24" cy="24" r="15" stroke="#0B5FFF" stroke-width="1" fill="none" opacity=".5"/>
+          <path d="M10 32 L19 16 L24 26 L29 12 L38 32" stroke="#22D3EE" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="29" cy="12" r="3.2" fill="#FFB703"/>
+        </svg>
+        <div class="spotbadge">Spot 04 · Edward Deming</div>
+        <h1 class="title-xl"><span class="g">Gerente<br>por un día</span></h1>
+        <p class="sub">Tres crisis reales de la industria automotriz. Tú lees los datos, tú decides, tú cambias la historia.<br><b style="color:#fff">No necesitas saber de autos. Solo mirar los números.</b></p>
+        <div class="tapcta">
+          <svg class="handicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 11V4.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 11.5V7a1.5 1.5 0 0 1 3 0v6.5a7 7 0 0 1-7 7h-1.2a5 5 0 0 1-4-2l-2.6-3.6a1.6 1.6 0 0 1 2.4-2.1L9 15"/></svg>
+          Toca para comenzar
+        </div>
+        <div style="color:var(--dim);font-size:.86em">Duración: 3 minutos · 3 decisiones</div>
+      </div>
+      <div class="marquee">Universidad Internacional del Ecuador · Ingeniería Automotriz</div>
+    </section>
+
+    <!-- ---------- 2. CÓMO FUNCIONA ---------- -->
+    <section class="screen col gap-m" id="s-howto">
+      <div class="stack col gap-m" style="height:100%">
+        <div>
+          <span class="eyebrow"><i class="pip"></i> Instrucciones · léelas, son 20 segundos</span>
+          <h2 style="font-size:clamp(1.9rem,4vw,3.4rem);margin-top:14px">Así funciona el reto</h2>
+        </div>
+        <div class="grid3">
+          <div class="card">
+            <div class="glow" style="background:#0B5FFF"></div>
+            <div class="num-chip">1</div>
+            <h3>Lee el caso</h3>
+            <p>Te presentamos una empresa real con un problema real. Verás 3 cifras clave. Tómate 10 segundos para entenderlas.</p>
+          </div>
+          <div class="card">
+            <div class="glow" style="background:#22D3EE"></div>
+            <div class="num-chip">2</div>
+            <h3>Encuentra la anomalía</h3>
+            <p>Aparece un gráfico de control. <b style="color:#fff">Toca la barra que se sale del límite rojo.</b> Ese es el dato que nadie quiso ver.</p>
+          </div>
+          <div class="card">
+            <div class="glow" style="background:#FFB703"></div>
+            <div class="num-chip">3</div>
+            <h3>Decide como gerente</h3>
+            <p>Eliges una de 3 acciones. Tus indicadores suben o bajan al instante y descubres qué pasó en la vida real.</p>
+          </div>
+        </div>
+        <div class="hint">
+          <span class="bulb"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg></span>
+          <div>Arriba verás siempre tus <b>4 indicadores</b>: Calidad, Costos, Reputación y Clientes. Empiezas con 50 puntos en cada uno. Tu meta: terminar lo más alto posible.</div>
+        </div>
+        <div class="demo">
+          <div class="demo-panel">
+            <div class="dl-t">Vista previa · así se ve el paso 2</div>
+            <div class="mini">
+              <div class="mline"><span>Límite</span></div>
+              <div class="mb" style="height:38%"></div>
+              <div class="mb" style="height:34%"></div>
+              <div class="mb" style="height:41%"></div>
+              <div class="mb" style="height:36%"></div>
+              <div class="mb red" style="height:92%"></div>
+              <div class="mb" style="height:44%"></div>
+              <div class="mb" style="height:39%"></div>
+              <div class="hand">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 11V4.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 11.5V7a1.5 1.5 0 0 1 3 0v6.5a7 7 0 0 1-7 7h-1.2a5 5 0 0 1-4-2l-2.6-3.6a1.6 1.6 0 0 1 2.4-2.1L9 15"/></svg>
+              </div>
+            </div>
+            <div style="color:var(--dim);font-size:.86em">Solo una barra rompe el límite. Esa es la señal que un gerente no puede ignorar.</div>
+          </div>
+          <div class="demo-panel">
+            <div class="dl-t">Y tus indicadores reaccionan</div>
+            <p style="color:var(--muted);font-size:.92em">Cada decisión mueve los cuatro números de la barra superior. Al final recibes un puntaje de gestión de 0 a 100.</p>
+            <div class="demo-rows">
+              <div class="demo-row"><span>Calidad</span><b class="up" style="color:var(--green)">▲ +20</b></div>
+              <div class="demo-row"><span>Costos</span><b class="down" style="color:var(--red)">▼ 14</b></div>
+              <div class="demo-row"><span>Reputación</span><b class="up" style="color:var(--green)">▲ +14</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-a wrap-btns" style="justify-content:space-between">
+          <div style="color:var(--dim);font-size:.88em">Puedes volver a ver estas instrucciones tocando el botón <b style="color:var(--muted)">?</b> en la barra superior.</div>
+          <button class="btn btn-p" id="goRole">Entendido, elegir mi rol
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 3. ROL ---------- -->
+    <section class="screen col gap-m" id="s-role">
+      <div class="stack col gap-m" style="height:100%">
+        <div>
+          <span class="eyebrow"><i class="pip"></i> Paso previo · elige tu silla</span>
+          <h2 style="font-size:clamp(1.7rem,3.6vw,3rem);margin-top:14px">¿Qué tipo de gerente serás?</h2>
+          <p class="lead" style="margin-top:10px">Tu rol cambia el enfoque de los comentarios, no la dificultad. Toca una tarjeta para continuar.</p>
+        </div>
+        <div class="grid3" id="roleGrid"></div>
+        <div class="hint mt-a">
+          <span class="bulb"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg></span>
+          <div><b>Dato:</b> W. Edwards Deming decía que el 94% de los problemas de una empresa vienen del sistema, no de las personas. Hoy vas a comprobarlo.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 4. BRIEFING ---------- -->
+    <section class="screen col gap-m" id="s-brief">
+      <div class="stack col gap-m" style="height:100%">
+        <div class="case-head">
+          <div>
+            <div class="row" style="gap:10px;flex-wrap:wrap">
+              <span class="tag gold" id="bCaseNo">Caso 1 de 3</span>
+              <span class="tag" id="bMeta">Toyota · Japón · 1965</span>
+            </div>
+            <h2 class="case-title" style="margin-top:14px" id="bTitle"></h2>
+          </div>
+        </div>
+        <p class="lead" id="bLead"></p>
+        <div class="factrow" id="bFacts"></div>
+        <div class="hint" id="bHint"></div>
+        <div class="mt-a wrap-btns" style="justify-content:flex-end">
+          <button class="btn btn-p" id="goAnalyze">Ver los datos
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 5. ANÁLISIS ---------- -->
+    <section class="screen col gap-s" id="s-analyze">
+      <div class="stack col gap-s" style="height:100%">
+        <div class="row between" style="gap:16px;flex-wrap:wrap">
+          <div>
+            <span class="eyebrow"><i class="pip"></i> Paso 2 · analiza</span>
+            <h2 style="font-size:clamp(1.4rem,2.6vw,2.3rem);margin-top:10px" id="aTitle"></h2>
+          </div>
+          <span class="tag gold" id="aCaseNo">Caso 1 de 3</span>
+        </div>
+        <div class="hint" id="aHint">
+          <span class="bulb"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg></span>
+          <div id="aHintTxt"></div>
+        </div>
+        <div class="chartwrap">
+          <div class="chart-top">
+            <div class="chart-t" id="cTitle"></div>
+            <div class="legend"><span><i></i> Límite de control aceptable</span></div>
+          </div>
+          <div class="plot" id="plot">
+            <div class="ucl" id="ucl"><span id="uclLbl">Límite</span></div>
+            <div class="tapme" id="tapme">▼ Toca la barra fuera de control ▼</div>
+          </div>
+        </div>
+        <div class="row between mt-a" style="gap:16px;flex-wrap:wrap">
+          <div style="color:var(--dim);font-size:.88em" id="aFoot">Pista: busca la barra que cruza la línea roja punteada.</div>
+          <button class="btn btn-p" id="goDecide" style="display:none">Ahora decide
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 6. DECISIÓN ---------- -->
+    <section class="screen col gap-s" id="s-decide">
+      <div class="stack col gap-s" style="height:100%">
+        <div class="row between" style="gap:16px;flex-wrap:wrap">
+          <div>
+            <span class="eyebrow"><i class="pip"></i> Paso 3 · decide</span>
+            <h2 style="font-size:clamp(1.4rem,2.6vw,2.3rem);margin-top:10px" id="dTitle"></h2>
+          </div>
+          <span class="tag gold" id="dCaseNo">Caso 1 de 3</span>
+        </div>
+        <div class="hint">
+          <span class="bulb"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg></span>
+          <div><b>Toca una de las tres tarjetas.</b> No hay respuestas obvias: cada opción cuesta algo. Piensa como gerente, no como estudiante.</div>
+        </div>
+        <div class="opts" id="opts"></div>
+        <div class="row between mt-a" style="gap:16px;flex-wrap:wrap;padding-top:6px">
+          <div style="color:var(--dim);font-size:.88em">Tu elección moverá los 4 indicadores de la barra superior al instante.</div>
+          <div style="color:var(--dim);font-size:.88em">Sin marcha atrás · decisión final</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 7. IMPACTO ---------- -->
+    <section class="screen col gap-s" id="s-impact">
+      <div class="stack col gap-s" style="height:100%">
+        <div class="row between" style="gap:16px;flex-wrap:wrap">
+          <div>
+            <span class="eyebrow"><i class="pip"></i> Resultado de tu decisión</span>
+            <h2 style="font-size:clamp(1.4rem,2.6vw,2.3rem);margin-top:10px" id="iTitle"></h2>
+          </div>
+          <span class="tag gold" id="iCaseNo">Caso 1 de 3</span>
+        </div>
+        <div class="impact-grid">
+          <div class="verdict">
+            <div class="vhead">
+              <div class="vbadge" id="vBadge"></div>
+              <div><div class="vt" id="vTitle"></div><div style="color:var(--muted);font-size:.9em" id="vSub"></div></div>
+            </div>
+            <p style="color:var(--muted)" id="vTxt"></p>
+            <div class="deltas" id="vDeltas"></div>
+          </div>
+          <div class="realbox">
+            <div class="rl">Qué pasó en la vida real</div>
+            <h4 id="rTitle"></h4>
+            <p id="rTxt"></p>
+            <div class="quote" id="rQuote"></div>
+          </div>
+        </div>
+        <div class="row between mt-a" style="gap:16px;flex-wrap:wrap">
+          <div style="color:var(--dim);font-size:.88em">Los números que ves arriba ya cambiaron por tu decisión.</div>
+          <button class="btn btn-p" id="goNext">Siguiente caso
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 8. FINAL ---------- -->
+    <section class="screen center gap-m" id="s-final">
+      <div class="stack col center gap-m" style="align-items:center;width:100%">
+        <span class="eyebrow"><i class="pip"></i> Evaluación final de gestión</span>
+        <div class="finalgrid">
+          <div class="col center" style="align-items:center;gap:10px">
+            <div class="gaugewrap">
+              <svg viewBox="0 0 200 130">
+                <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#FF5C6C"/><stop offset="50%" stop-color="#FFB703"/><stop offset="100%" stop-color="#2ED47A"/>
+                </linearGradient></defs>
+                <path d="M20 115 A80 80 0 0 1 180 115" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="17" stroke-linecap="round"/>
+                <path id="gArc" d="M20 115 A80 80 0 0 1 180 115" fill="none" stroke="url(#gg)" stroke-width="17" stroke-linecap="round"
+                      stroke-dasharray="251.3" stroke-dashoffset="251.3" style="transition:stroke-dashoffset 1.6s cubic-bezier(.22,.9,.28,1)"/>
+              </svg>
+              <div class="gnum"><b id="gVal">0</b><span>Puntaje de gestión</span></div>
+            </div>
+            <div class="rank" id="rankTxt">—</div>
+          </div>
+          <div class="col gap-m" style="width:100%">
+            <div class="bars-final" id="finalBars"></div>
+            <div class="card" style="padding:clamp(14px,1.8vw,26px)">
+              <p id="finalMsg" style="color:var(--muted);font-size:1.02em"></p>
+            </div>
+            <div class="qrbox">
+              <div class="q">
+                <svg viewBox="0 0 24 24" fill="#04070F"><path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm9-2h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zm9-2h3v3h-3v-3zm5 0h2v2h-2v-2zm-5 5h2v2h-2v-2zm3 0h2v2h-2v-2zm2 2h2v2h-2v-2zm-5 0h2v2h-2v-2z"/></svg>
+              </div>
+              <div>
+                <b>¿Te gustó decidir con datos?</b>
+                <small>Ingeniería Automotriz UIDE · acércate al mesón del Spot 04 y escanea el código</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cta-final">
+          <button class="btn btn-g" id="againBtn">
+            <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.6 5.9"/><path d="M4 6v5h5"/></svg>
+            Jugar de nuevo
+          </button>
+          <button class="btn btn-p" id="reviewBtn">Ver las 3 lecciones de Deming</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ================= OVERLAY AYUDA ================= -->
+<div id="ov"><div class="ovcard" id="ovCard"></div></div>
+<div id="toast"></div>
+<canvas id="conf"></canvas>
+
+<script>
+/* =========================================================
+   RETO DEMING · Automotive Legends UIDE
+   App de kiosco táctil — 100% offline, un solo archivo.
+   ========================================================= */
+
+/* ---------- CONTENIDO ---------- */
+const ROLES = [
+  {id:'cal', name:'Gerente de Calidad', desc:'Tu obsesión: que ningún defecto llegue al cliente. Deming diría que eres su discípulo favorito.', color:'#22D3EE',
+   svg:'<svg viewBox="0 0 24 24" stroke="#22D3EE"><path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.2-7.5 9.5-4.4-1.3-7.5-5.1-7.5-9.5V6L12 3z"/><path d="M8.8 12.2l2.2 2.2 4.2-4.4"/></svg>'},
+  {id:'pro', name:'Gerente de Producción', desc:'Tu obsesión: que la línea nunca se detenga… salvo cuando detenerla salva la empresa.', color:'#FFB703',
+   svg:'<svg viewBox="0 0 24 24" stroke="#FFB703"><path d="M3 20h18"/><path d="M4 20V11l5 3V11l5 3V8l6 3.5V20"/><circle cx="7" cy="6.5" r="1.6"/></svg>'},
+  {id:'pos', name:'Gerente de Postventa', desc:'Tu obsesión: el cliente que vuelve. Escuchas quejas que otros archivan como "casos aislados".', color:'#8B5CF6',
+   svg:'<svg viewBox="0 0 24 24" stroke="#8B5CF6"><path d="M21 12a8 8 0 1 0-3.2 6.4L21 20l-.8-3.2A7.9 7.9 0 0 0 21 12z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/></svg>'}
+];
+
+const KPI_DEFS = [
+  {k:'q', name:'Calidad',    short:'Calidad',    color:'#22D3EE'},
+  {k:'c', name:'Costos',     short:'Costos',     color:'#FFB703'},
+  {k:'r', name:'Reputación', short:'Reputación', color:'#8B5CF6'},
+  {k:'s', name:'Clientes',   short:'Clientes',   color:'#2ED47A'}
+];
+
+const CASES = [
+  {
+    meta:'Toyota · Japón · 1961',
+    title:'La línea que se detiene sola',
+    lead:'Eres gerente en una armadora japonesa que quiere exportar a Estados Unidos. Los autos salen rápido, pero uno de cada ocho vuelve del concesionario con fallas. El directorio te da 90 días para arreglarlo.',
+    facts:[
+      {k:'12,4', d:'defectos detectados por cada 100 vehículos entregados'},
+      {k:'38%', d:'del costo de fábrica se va en retrabajo y reparaciones'},
+      {k:'90', d:'días para presentar tu plan al directorio'}
+    ],
+    hint:'<b>Tu misión:</b> los defectos no aparecen "al azar". Busca en qué momento el proceso se salió de control.',
+    chart:{
+      title:'Defectos por cada 100 vehículos · últimos 10 meses',
+      unit:'',
+      labels:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct'],
+      values:[6.1,5.8,6.4,6.0,6.6,6.2,13.9,7.1,6.8,7.4],
+      anomaly:6, ucl:9,
+      uclLabel:'Límite superior: 9 defectos',
+      ask:'¿En qué mes el proceso se salió de control?',
+      right:'Julio. Ese mes se incorporó un turno nuevo sin capacitación y nadie detuvo la línea.',
+      wrong:'Ese mes está dentro del rango normal. El pico real está en <b>Julio</b>: 13,9 defectos, muy por encima del límite.'
+    },
+    q:'¿Cómo atacas los defectos?',
+    options:[
+      {t:'Contratar 20 inspectores al final de la línea',
+       d:'Revisar cada auto terminado antes de despacharlo. Es la solución rápida y visible ante el directorio.',
+       delta:{q:6,c:-14,r:2,s:3}, tone:'mid',
+       vt:'Apagaste el humo, no el fuego',
+       vs:'Decisión defensiva',
+       vtxt:'Detectar defectos al final no los elimina: solo los esconde antes de que salgan. Pagas dos veces — el error y la inspección — y el operario nunca sabe qué hizo mal.',
+       rt:'Deming lo llamó "inspección masiva"',
+       rtxt:'El punto 3 de los 14 principios de Deming dice literalmente: dejar de depender de la inspección masiva para lograr calidad. La calidad no se inspecciona, se construye en el proceso.',
+       rq:'"La inspección para mejorar la calidad llega tarde. La calidad ya está en el producto, buena o mala."'},
+      {t:'Detener la línea al primer defecto y capacitar a cada operario',
+       d:'Cualquier trabajador puede parar la producción si detecta algo raro. Se investiga la causa raíz en el momento.',
+       delta:{q:20,c:9,r:14,s:16}, tone:'good',
+       vt:'Pensaste como Deming',
+       vs:'Decisión de sistema',
+       vtxt:'Parar la línea cuesta minutos; entregar un auto defectuoso cuesta la marca. Al atacar la causa raíz, los defectos bajan y el costo cae por sí solo. La calidad barata es la que se hace bien la primera vez.',
+       rt:'Toyota ganó el Premio Deming en 1965',
+       rtxt:'Toyota adoptó el control total de calidad y el principio de "jidoka" — detener la línea ante cualquier anomalía. Ganó el Premio Deming de la Industria en 1965 y en dos décadas pasó de fabricante regional a líder mundial.',
+       rq:'"Mejora el proceso y la calidad sube mientras el costo baja." — W. E. Deming'},
+      {t:'Acelerar la línea 15% para compensar con volumen',
+       d:'Si el 12% sale malo, fabricamos más para cumplir la meta de entregas del trimestre.',
+       delta:{q:-16,c:-10,r:-14,s:-18}, tone:'bad',
+       vt:'Multiplicaste el problema',
+       vs:'Decisión de corto plazo',
+       vtxt:'Producir más rápido con un proceso inestable solo genera más defectos por hora. El costo de garantía se dispara y la marca se quema en el mercado que querías conquistar.',
+       rt:'Le pasó a la industria de Detroit',
+       rtxt:'En los años 70 varias armadoras estadounidenses priorizaron volumen trimestral sobre estabilidad del proceso. Los importados japoneses, con menos defectos, les arrebataron una porción enorme del mercado.',
+       rq:'"Nadie puede inspeccionar la calidad hacia adentro de un producto."'}
+    ]
+  },
+  {
+    meta:'General Motors · EE. UU. · 2005-2014',
+    title:'El interruptor de 57 centavos',
+    lead:'Eres gerente de postventa. Un interruptor de encendido puede moverse solo y apagar el motor en marcha — junto con la dirección asistida y las bolsas de aire. Cambiarlo cuesta menos de un dólar por auto. Reconocerlo cuesta millones.',
+    facts:[
+      {k:'2,6 M', d:'vehículos con el mismo componente en las calles'},
+      {k:'US$ 0,57', d:'costo del repuesto corregido, por unidad'},
+      {k:'10 años', d:'de reportes de campo acumulados sin acción'}
+    ],
+    hint:'<b>Tu misión:</b> los reportes parecen "casos aislados". Encuentra el trimestre donde el patrón dejó de ser casualidad.',
+    chart:{
+      title:'Reportes de apagado del motor en marcha · por trimestre',
+      unit:'',
+      labels:['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10'],
+      values:[7,9,8,11,10,13,12,15,14,41],
+      anomaly:9, ucl:22,
+      uclLabel:'Límite superior: 22 reportes',
+      ask:'¿Qué trimestre gritaba "esto ya no es casualidad"?',
+      right:'T10. Los reportes casi se triplicaron: el patrón dejó de ser ruido y se volvió señal.',
+      wrong:'Ese trimestre está dentro de la variación normal. El salto real es <b>T10</b>: 41 reportes contra un límite de 22.'
+    },
+    q:'Tienes la señal. ¿Qué haces hoy?',
+    options:[
+      {t:'Recall inmediato de los 2,6 millones de vehículos',
+       d:'Anuncio público, costo enorme y titulares negativos esta semana. Pero nadie más maneja un auto que puede apagarse solo.',
+       delta:{q:16,c:-12,r:20,s:19}, tone:'good',
+       vt:'Elegiste la verdad temprana',
+       vs:'Decisión de integridad',
+       vtxt:'Sí, el costo inmediato duele y la prensa pega fuerte. Pero un recall voluntario y temprano es infinitamente más barato que una investigación federal, demandas y una marca marcada por muertes evitables.',
+       rt:'GM esperó una década',
+       rtxt:'General Motors llamó a revisión 2,6 millones de vehículos recién en 2014. La falla se vinculó a al menos 124 muertes. La empresa pagó US$ 35 millones de multa por no reportar a tiempo y cientos de millones más en compensaciones.',
+       rq:'"En Dios confiamos; los demás traigan datos." — atribuido a W. E. Deming'},
+      {t:'Esperar 6 meses más para tener datos concluyentes',
+       d:'Con más evidencia el informe será irrebatible y evitas un recall innecesario si resulta ser un error de muestreo.',
+       delta:{q:-8,c:4,r:-20,s:-17}, tone:'bad',
+       vt:'Los datos ya eran concluyentes',
+       vs:'Decisión de parálisis',
+       vtxt:'Cuando una señal supera el límite de control, esperar no reduce la incertidumbre: solo aumenta la exposición. Cada mes de espera son miles de vehículos más en circulación con el mismo riesgo.',
+       rt:'El costo de esperar fue el peor posible',
+       rtxt:'La demora convirtió un problema de ingeniería de 57 centavos por unidad en una crisis reputacional histórica, con investigaciones del Congreso de EE. UU. y una multa federal de US$ 35 millones.',
+       rq:'"El costo más importante es desconocido e imposible de conocer." — W. E. Deming'},
+      {t:'Emitir un boletín técnico interno solo a concesionarios',
+       d:'Se corrige el interruptor cuando el cliente venga por mantenimiento. Sin escándalo, sin costo de campaña.',
+       delta:{q:-4,c:2,r:-15,s:-12}, tone:'mid',
+       vt:'Silencio administrativo',
+       vs:'Decisión a medias',
+       vtxt:'Solo llegarías a los clientes que casualmente entran al taller. Los demás siguen expuestos y, cuando se sepa, la percepción no será "hubo una falla" sino "lo sabían y lo callaron".',
+       rt:'Exactamente lo que ocurrió',
+       rtxt:'Durante años el problema se manejó con boletines internos en lugar de un recall público. Cuando salió a la luz, el daño ya no era técnico sino de confianza — el activo más caro de reconstruir.',
+       rq:'"La calidad empieza en la sala del directorio."'}
+    ]
+  },
+  {
+    meta:'Detroit vs. Japón · 1950-1980',
+    title:'La invitación que Detroit rechazó',
+    lead:'Eres director general y tu empresa lleva tres años perdiendo participación de mercado. Un consultor estadounidense propone reentrenar a toda la organización en control estadístico de procesos. El directorio quiere resultados este trimestre.',
+    facts:[
+      {k:'-9 pts', d:'de participación de mercado perdida en 3 años'},
+      {k:'27%', d:'de rotación anual de personal en planta'},
+      {k:'1 trim.', d:'de paciencia que te da el directorio'}
+    ],
+    hint:'<b>Tu misión:</b> la fuga de talento tiene un punto de quiebre. Detecta cuándo la gente empezó a irse en masa.',
+    chart:{
+      title:'Rotación mensual de personal de planta (%)',
+      unit:'%',
+      labels:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct'],
+      values:[1.8,2.1,1.9,2.4,2.2,2.6,2.5,2.8,6.9,3.1],
+      anomaly:8, ucl:4.5,
+      uclLabel:'Límite superior: 4,5%',
+      ask:'¿Cuándo se rompió el sistema?',
+      right:'Septiembre. Tras congelar la capacitación, casi el 7% de la planta renunció en un solo mes.',
+      wrong:'Ese mes es variación normal. El quiebre está en <b>Septiembre</b>: 6,9% de rotación contra un límite de 4,5%.'
+    },
+    q:'El directorio espera tu plan. ¿Qué priorizas?',
+    options:[
+      {t:'Invertir en capacitación y mejora continua de todo el personal',
+       d:'Doce meses de formación en control estadístico, mandos incluidos. Los resultados no se verán este trimestre.',
+       delta:{q:18,c:6,r:16,s:15}, tone:'good',
+       vt:'Sembraste una ventaja de 30 años',
+       vs:'Decisión de largo plazo',
+       vtxt:'Formar a la gente que ya conoce el proceso es la inversión con mayor retorno que existe en manufactura: baja la rotación, baja el defecto y baja el costo — en ese orden y sin publicidad de por medio.',
+       rt:'Japón sí aceptó la invitación',
+       rtxt:'Deming llevó estas ideas a Japón en 1950 tras ser ignorado en Estados Unidos. La Unión Japonesa de Científicos e Ingenieros creó el Premio Deming en 1951 y, en tres décadas, la industria automotriz japonesa pasó de ser sinónimo de baja calidad a poner en jaque a Detroit.',
+       rq:'"El aprendizaje no es obligatorio… pero la supervivencia tampoco." — W. E. Deming'},
+      {t:'Duplicar el presupuesto de publicidad',
+       d:'Si el producto no cambia rápido, al menos cambiemos cómo lo perciben. Impacto visible en semanas.',
+       delta:{q:-10,c:-13,r:5,s:-9}, tone:'bad',
+       vt:'Le pusiste marketing a un problema de proceso',
+       vs:'Decisión cosmética',
+       vtxt:'La publicidad acelera el encuentro entre el cliente y un producto que aún falla. Más gente probando un auto defectuoso significa más gente comentando que falla.',
+       rt:'Detroit apostó a la marca',
+       rtxt:'Mientras las armadoras estadounidenses invertían en imagen y modelos nuevos, los fabricantes japoneses invertían en el proceso. El mercado terminó premiando la fiabilidad, no la campaña.',
+       rq:'"No basta con hacer lo mejor que puedas: primero debes saber qué hacer."'},
+      {t:'Bajar el precio 10% para recuperar volumen',
+       d:'Recuperas participación de mercado rápido y le muestras al directorio una curva que sube.',
+       delta:{q:-6,c:-18,r:-6,s:4}, tone:'mid',
+       vt:'Compraste tiempo con tu margen',
+       vs:'Decisión de supervivencia',
+       vtxt:'El precio recupera volumen, pero destruye el margen que necesitas justamente para arreglar el proceso. Es pedir prestado del futuro para pagar el trimestre.',
+       rt:'La guerra de precios de los 70',
+       rtxt:'Los descuentos agresivos sostuvieron el volumen algunos años, pero erosionaron el margen y retrasaron la inversión en calidad. Cuando el mercado se contrajo, la brecha con los importados ya era estructural.',
+       rq:'"Las metas numéricas sin un método para alcanzarlas son un fraude." — W. E. Deming'}
+    ]
+  }
+];
+
+const LESSONS = [
+  {n:'01', t:'La calidad se construye, no se inspecciona', d:'Revisar al final es pagar dos veces. Corregir el proceso es pagar una sola vez, y para siempre.'},
+  {n:'02', t:'Los datos hablan antes que las personas', d:'Cuando una señal supera el límite de control, ya no es casualidad. Esperar más datos casi nunca reduce el riesgo: lo multiplica.'},
+  {n:'03', t:'El 94% de los problemas son del sistema', d:'No busques al culpable, busca la causa. Cambiar el sistema es la única mejora que se sostiene en el tiempo.'}
+];
+
+/* ---------- ESTADO ---------- */
+const S = {kpi:{q:50,c:50,r:50,s:50}, case:0, step:1, role:null, analysisHits:0, sound:true, picked:[]};
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clamp = (n,a=0,b=100)=>Math.max(a,Math.min(b,n));
+
+/* ---------- SONIDO (WebAudio, sin archivos) ---------- */
+let actx=null;
+function beep(type){
+  if(!S.sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const map={tap:[520,.06,'triangle'],ok:[780,.16,'sine'],good:[880,.22,'sine'],bad:[180,.24,'sawtooth'],swipe:[380,.08,'sine'],win:[1046,.3,'sine']};
+    const [f,dur,wave]=map[type]||map.tap;
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type=wave; o.frequency.value=f;
+    g.gain.setValueAtTime(.0001,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.13,actx.currentTime+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+dur);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+dur+.02);
+    if(type==='good'||type==='win'){
+      const o2=actx.createOscillator(), g2=actx.createGain();
+      o2.type='sine'; o2.frequency.setValueAtTime(f*1.5,actx.currentTime+.12);
+      g2.gain.setValueAtTime(.0001,actx.currentTime+.12);
+      g2.gain.exponentialRampToValueAtTime(.10,actx.currentTime+.14);
+      g2.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.42);
+      o2.connect(g2); g2.connect(actx.destination); o2.start(actx.currentTime+.12); o2.stop(actx.currentTime+.45);
+    }
+  }catch(e){}
+}
+
+/* ---------- NAVEGACIÓN ---------- */
+let current='s-attract';
+function go(id){
+  const prev=$('#'+current);
+  if(prev) prev.classList.remove('on');
+  current=id;
+  const el=$('#'+id);
+  el.classList.add('on');
+  el.scrollTop=0;
+  $('#hud').classList.toggle('on', id!=='s-attract');
+  beep('swipe');
+  resetIdle();
+}
+
+/* ---------- TOAST ---------- */
+let toastT;
+function toast(msg,kind=''){
+  const t=$('#toast'); t.className=''; t.innerHTML=msg;
+  void t.offsetWidth; t.classList.add('on'); if(kind) t.classList.add(kind);
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),3400);
+}
+
+/* ---------- HUD ---------- */
+function buildKPIs(){
+  $('#kpis').innerHTML = KPI_DEFS.map(d=>`
+    <div class="kpi" id="kpi-${d.k}">
+      <div class="n"><span class="lbl">${d.short}</span><span class="val" id="v-${d.k}">50</span></div>
+      <div class="track"><div class="fill" id="f-${d.k}" style="width:50%;background:${d.color}"></div></div>
+      <div class="delta" id="d-${d.k}"></div>
+    </div>`).join('');
+  $('#dots').innerHTML = CASES.map((_,i)=>`<div class="dot" id="dot-${i}"></div>`).join('');
+}
+function renderKPIs(deltas){
+  KPI_DEFS.forEach(d=>{
+    const v=Math.round(S.kpi[d.k]);
+    $('#v-'+d.k).textContent=v;
+    $('#f-'+d.k).style.width=v+'%';
+    $('#f-'+d.k).style.background = v<35 ? '#FF5C6C' : (v<50 ? '#FFB703' : d.color);
+    if(deltas && deltas[d.k]!==undefined && deltas[d.k]!==0){
+      const dd=deltas[d.k], el=$('#d-'+d.k);
+      el.textContent=(dd>0?'▲ +':'▼ ')+dd;
+      el.className='delta show '+(dd>0?'up':'down');
+      el.style.color = dd>0 ? 'var(--green)' : 'var(--red)';
+      $('#kpi-'+d.k).classList.add('pulse');
+      setTimeout(()=>{el.classList.remove('show');$('#kpi-'+d.k).classList.remove('pulse');},2600);
+    }
+  });
+}
+function renderSteps(){
+  CASES.forEach((_,i)=>{
+    const el=$('#dot-'+i); if(!el) return;
+    el.className='dot'+(i<S.case?' done':(i===S.case?' now':''));
+  });
+  $('#stepTxt').textContent = S.case>=CASES.length ? 'Reto completado' : `Caso ${S.case+1} · Paso ${S.step} de 3`;
+}
+function applyDelta(d){
+  Object.keys(d).forEach(k=>S.kpi[k]=clamp(S.kpi[k]+d[k]));
+  renderKPIs(d);
+}
+
+/* ---------- PANTALLA: ROLES ---------- */
+function buildRoles(){
+  $('#roleGrid').innerHTML = ROLES.map(r=>`
+    <button class="card tap" data-role="${r.id}">
+      <div class="glow" style="background:${r.color}"></div>
+      <div class="ico">${r.svg}</div>
+      <h3>${r.name}</h3>
+      <p>${r.desc}</p>
+      <div class="pick" style="margin-top:16px;display:flex;align-items:center;gap:9px;font-size:.76em;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${r.color}">
+        Tocar para elegir →
+      </div>
+    </button>`).join('');
+  $$('#roleGrid .card').forEach(c=>c.addEventListener('click',()=>{
+    S.role=ROLES.find(r=>r.id===c.dataset.role);
+    beep('ok');
+    toast(`Rol asignado: <b>${S.role.name}</b>`,'ok');
+    startCase(0);
+  }));
+}
+
+/* ---------- CASO: BRIEFING ---------- */
+function startCase(i){
+  S.case=i; S.step=1; renderSteps();
+  const c=CASES[i];
+  $('#bCaseNo').textContent=`Caso ${i+1} de 3`;
+  $('#bMeta').textContent=c.meta;
+  $('#bTitle').textContent=c.title;
+  $('#bLead').textContent=c.lead;
+  $('#bFacts').innerHTML=c.facts.map(f=>`<div class="fact"><div class="k">${f.k}</div><div class="d">${f.d}</div></div>`).join('');
+  $('#bHint').innerHTML=`<span class="bulb"><svg viewBox="0 0 24 24" fill="none" stroke="#FFB703" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg></span><div>${c.hint}</div>`;
+  go('s-brief');
+}
+
+/* ---------- CASO: ANÁLISIS (gráfico de control) ---------- */
+let analyzeLocked=false;
+function buildAnalyze(){
+  const c=CASES[S.case], ch=c.chart;
+  S.step=2; renderSteps();
+  analyzeLocked=false;
+  $('#aTitle').textContent=ch.ask;
+  $('#aCaseNo').textContent=`Caso ${S.case+1} de 3`;
+  $('#aHintTxt').innerHTML=`<b>Toca la barra roja que cruza la línea punteada.</b> En un gráfico de control, todo lo que supera ese límite ya no es casualidad: es una señal de que el proceso falló.`;
+  $('#cTitle').textContent=ch.title;
+  $('#aFoot').textContent='Pista: busca la barra que cruza la línea roja punteada.';
+  $('#goDecide').style.display='none';
+  $('#tapme').style.display='flex';
+
+  const max=Math.max(...ch.values)*1.18;
+  const plot=$('#plot');
+  [...plot.querySelectorAll('.bar')].forEach(b=>b.remove());
+
+  ch.values.forEach((v,idx)=>{
+    const b=document.createElement('button');
+    b.className='bar'+(v>ch.ucl?' hot':'');
+    b.dataset.idx=idx;
+    b.innerHTML=`<span class="mark">${v>ch.ucl?'✓':'✕'}</span><span class="yv">${String(v).replace('.',',')}${ch.unit}</span><span class="xl">${ch.labels[idx]}</span>`;
+    b.addEventListener('click',()=>pickBar(idx,b));
+    plot.appendChild(b);
+  });
+  plot.classList.remove('ready');
+  const ucl=$('#ucl');
+  ucl.style.bottom = `calc(34px + ${(ch.ucl/max)*100}% * (100% - 56px) / 100%)`;
+  // posicionamiento fiable: usar porcentaje del área útil
+  requestAnimationFrame(()=>{
+    const h=plot.clientHeight-56;
+    ucl.style.bottom=(34+(ch.ucl/max)*h)+'px';
+    $('#uclLbl').textContent=ch.uclLabel;
+    [...plot.querySelectorAll('.bar')].forEach((b,idx)=>{
+      setTimeout(()=>{b.style.height=Math.max(6,(ch.values[idx]/max)*h)+'px';},60+idx*55);
+    });
+    setTimeout(()=>plot.classList.add('ready'),60+ch.values.length*55);
+  });
+  go('s-analyze');
+}
+function pickBar(idx,el){
+  if(analyzeLocked) return;
+  const ch=CASES[S.case].chart;
+  analyzeLocked=true;
+  $('#tapme').style.display='none';
+  const ok = idx===ch.anomaly;
+  if(ok){
+    el.classList.add('correct'); S.analysisHits++;
+    beep('good');
+    toast('✓ Correcto · +5 puntos de análisis','ok');
+    $('#aFoot').innerHTML=`<b style="color:var(--green)">Bien visto.</b> ${ch.right}`;
+    burst(24);
+  }else{
+    el.classList.add('wrong');
+    const right=$$('#plot .bar')[ch.anomaly];
+    right.classList.add('correct'); right.querySelector('.mark').textContent='✓';
+    beep('bad');
+    toast('Casi. Mira la barra verde: esa era la señal','no');
+    $('#aFoot').innerHTML=`<span style="color:var(--gold)">${ch.wrong}</span>`;
+  }
+  setTimeout(()=>{const b=$('#goDecide');b.style.display='inline-flex';b.scrollIntoView({block:'nearest'});},700);
+}
+
+/* ---------- CASO: DECISIÓN ---------- */
+function buildDecide(){
+  const c=CASES[S.case];
+  S.step=3; renderSteps();
+  $('#dTitle').textContent=c.q;
+  $('#dCaseNo').textContent=`Caso ${S.case+1} de 3`;
+  const letters=['A','B','C'];
+  $('#opts').innerHTML=c.options.map((o,i)=>`
+    <button class="opt" data-i="${i}">
+      <span class="letter">${letters[i]}</span>
+      <h4>${o.t}</h4>
+      <p>${o.d}</p>
+      <span class="pick">Elegir esta opción →</span>
+    </button>`).join('');
+  $$('#opts .opt').forEach(b=>b.addEventListener('click',()=>{
+    $$('#opts .opt').forEach(x=>{if(x!==b)x.classList.add('dis')});
+    beep('tap');
+    setTimeout(()=>choose(+b.dataset.i),240);
+  }));
+  go('s-decide');
+}
+
+/* ---------- CASO: IMPACTO ---------- */
+const TONE={
+  good:{c:'#2ED47A',bg:'rgba(46,212,122,.14)',ico:'<svg viewBox="0 0 24 24" stroke="#2ED47A"><path d="M5 13l4.5 4.5L19 7"/></svg>'},
+  mid:{c:'#FFB703',bg:'rgba(255,183,3,.14)',ico:'<svg viewBox="0 0 24 24" stroke="#FFB703"><path d="M12 8v5"/><circle cx="12" cy="16.6" r=".6" fill="#FFB703"/><path d="M10.3 4.2 2.9 17.4A2 2 0 0 0 4.6 20.4h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/></svg>'},
+  bad:{c:'#FF5C6C',bg:'rgba(255,92,108,.14)',ico:'<svg viewBox="0 0 24 24" stroke="#FF5C6C"><path d="M7 7l10 10M17 7L7 17"/></svg>'}
+};
+function choose(i){
+  const c=CASES[S.case], o=c.options[i];
+  S.picked.push({case:S.case,opt:i,tone:o.tone});
+  applyDelta(o.delta);
+  beep(o.tone==='good'?'good':(o.tone==='bad'?'bad':'ok'));
+  if(o.tone==='good') burst(60);
+
+  const t=TONE[o.tone];
+  $('#iTitle').textContent=c.title;
+  $('#iCaseNo').textContent=`Caso ${S.case+1} de 3`;
+  $('#vBadge').style.background=t.bg; $('#vBadge').innerHTML=t.ico;
+  $('#vTitle').textContent=o.vt; $('#vTitle').style.color=t.c;
+  $('#vSub').textContent=o.vs;
+  $('#vTxt').textContent=o.vtxt;
+  $('#vDeltas').innerHTML=KPI_DEFS.map(d=>{
+    const v=o.delta[d.k]||0;
+    const cls=v>0?'up':(v<0?'down':'flat');
+    return `<div class="drow"><span class="nm">${d.name}</span><span class="dv ${cls}">${v>0?'▲ +':(v<0?'▼ ':'– ')}${v!==0?Math.abs(v):''}</span></div>`;
+  }).join('');
+  $('#rTitle').textContent=o.rt;
+  $('#rTxt').textContent=o.rtxt;
+  $('#rQuote').textContent=o.rq;
+  $('#goNext').innerHTML = (S.case===CASES.length-1)
+    ? 'Ver mi evaluación final <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+    : 'Siguiente caso <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  go('s-impact');
+}
+
+/* ---------- FINAL ---------- */
+function buildFinal(){
+  S.case=CASES.length; renderSteps();
+  const base=(S.kpi.q+S.kpi.c+S.kpi.r+S.kpi.s)/4;
+  const score=Math.round(clamp(base + S.analysisHits*4));
+  let rank,msg;
+  if(score>=78){rank='Gerente Legendario';msg='Leíste los datos antes de opinar y actuaste cuando el sistema lo pedía. Eso es exactamente lo que Deming enseñó en Japón en 1950 — y lo que hace un ingeniero automotriz hoy en cualquier planta del mundo.';}
+  else if(score>=58){rank='Buen Gerente';msg='Tomaste decisiones sensatas y sostuviste los indicadores. Te faltó solo un poco más de confianza en lo que los datos ya te estaban diciendo. Con método, eso se entrena.';}
+  else{rank='Gerente en Desarrollo';msg='Algunas decisiones costaron caro, y está perfecto: así se aprende. La buena noticia es que todo lo que acabas de vivir se estudia, se mide y se mejora. Eso es Ingeniería Automotriz.';}
+  $('#rankTxt').textContent=rank;
+  $('#finalMsg').textContent=msg;
+  $('#finalBars').innerHTML=KPI_DEFS.map(d=>`
+    <div class="bf"><span class="n">${d.name}</span>
+      <span class="t"><span class="f" id="bf-${d.k}" style="background:${d.color}"></span></span>
+      <span class="v">${Math.round(S.kpi[d.k])}</span></div>`).join('')
+    + `<div class="bf"><span class="n">Aciertos de análisis</span>
+        <span class="t"><span class="f" id="bf-x" style="background:#22D3EE"></span></span>
+        <span class="v">${S.analysisHits}/3</span></div>`;
+  go('s-final');
+  setTimeout(()=>{
+    KPI_DEFS.forEach(d=>$('#bf-'+d.k).style.width=Math.round(S.kpi[d.k])+'%');
+    $('#bf-x').style.width=(S.analysisHits/3*100)+'%';
+    $('#gArc').style.strokeDashoffset = 251.3 - (251.3*score/100);
+    animNum($('#gVal'),score,1500);
+    beep('win');
+    if(score>=78) burst(150);
+  },260);
+}
+function animNum(el,to,dur){
+  const t0=performance.now();
+  (function f(t){
+    const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(to*e);
+    if(p<1) requestAnimationFrame(f);
+  })(t0);
+}
+
+/* ---------- OVERLAY AYUDA / LECCIONES ---------- */
+function openHelp(){
+  $('#ovCard').innerHTML=`
+    <div class="row between" style="gap:16px">
+      <h2 style="font-size:clamp(1.4rem,2.4vw,2.2rem)">Cómo se juega</h2>
+      <button class="iconbtn" id="ovX"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+    </div>
+    <div class="grid3">
+      <div class="card"><div class="num-chip">1</div><h3>Lee el caso</h3><p>Una empresa real, un problema real y 3 cifras clave.</p></div>
+      <div class="card"><div class="num-chip">2</div><h3>Toca la anomalía</h3><p>En el gráfico, toca la barra que cruza la línea roja punteada.</p></div>
+      <div class="card"><div class="num-chip">3</div><h3>Decide</h3><p>Elige una de 3 acciones y observa cómo cambian tus indicadores.</p></div>
+    </div>
+    <div class="hint"><span class="bulb"><svg viewBox="0 0 24 24" fill="none" stroke="#FFB703" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg></span>
+      <div>Cada indicador arranca en 50. Al final obtienes un puntaje de gestión de 0 a 100. Tres casos, unos 3 minutos.</div></div>
+    <button class="btn btn-p" id="ovClose" style="align-self:flex-end">Seguir jugando</button>`;
+  $('#ov').classList.add('on');
+  $('#ovX').onclick=$('#ovClose').onclick=()=>$('#ov').classList.remove('on');
+  beep('tap');
+}
+function openLessons(){
+  $('#ovCard').innerHTML=`
+    <div class="row between" style="gap:16px">
+      <h2 style="font-size:clamp(1.4rem,2.4vw,2.2rem)">Las 3 lecciones de Deming</h2>
+      <button class="iconbtn" id="ovX"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+    </div>
+    <div class="grid3">${LESSONS.map(l=>`
+      <div class="card"><div class="glow" style="background:#22D3EE"></div>
+        <div class="num-chip">${l.n}</div><h3>${l.t}</h3><p>${l.d}</p></div>`).join('')}</div>
+    <div class="hint"><span class="bulb"><svg viewBox="0 0 24 24" fill="none" stroke="#FFB703" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg></span>
+      <div>W. Edwards Deming (1900-1993): estadístico estadounidense. Detroit ignoró sus ideas; Japón las adoptó en 1950. El <b>Premio Deming</b> se creó en 1951 y Toyota lo ganó en 1965.</div></div>
+    <button class="btn btn-p" id="ovClose" style="align-self:flex-end">Cerrar</button>`;
+  $('#ov').classList.add('on');
+  $('#ovX').onclick=$('#ovClose').onclick=()=>$('#ov').classList.remove('on');
+  beep('ok');
+}
+
+/* ---------- CONFETI ---------- */
+const cv=$('#conf'), cx=cv.getContext('2d');
+let parts=[],raf=null;
+function sizeC(){cv.width=innerWidth;cv.height=innerHeight}
+sizeC(); addEventListener('resize',()=>{sizeC();refitChart()});
+function burst(n){
+  const cols=['#22D3EE','#0B5FFF','#FFB703','#2ED47A','#8B5CF6','#FFFFFF'];
+  for(let i=0;i<n;i++)parts.push({
+    x:innerWidth/2+(Math.random()-.5)*innerWidth*.5, y:innerHeight*.45,
+    vx:(Math.random()-.5)*11, vy:-Math.random()*13-4,
+    s:Math.random()*7+3, c:cols[(Math.random()*cols.length)|0],
+    r:Math.random()*6, vr:(Math.random()-.5)*.35, life:1
+  });
+  if(!raf) raf=requestAnimationFrame(tick);
+}
+function tick(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.life>0);
+  parts.forEach(p=>{
+    p.vy+=.42; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.life-=.008;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.globalAlpha=Math.max(0,p.life);
+    cx.fillStyle=p.c; cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6); cx.restore();
+  });
+  if(parts.length) raf=requestAnimationFrame(tick); else {raf=null;cx.clearRect(0,0,cv.width,cv.height);}
+}
+
+/* ---------- REAJUSTE DEL GRÁFICO ---------- */
+function refitChart(){
+  if(current!=='s-analyze') return;
+  const ch=CASES[S.case].chart, plot=$('#plot');
+  const max=Math.max(...ch.values)*1.18, h=plot.clientHeight-56;
+  $('#ucl').style.bottom=(34+(ch.ucl/max)*h)+'px';
+  [...plot.querySelectorAll('.bar')].forEach((b,i)=>b.style.height=Math.max(6,(ch.values[i]/max)*h)+'px');
+}
+
+/* ---------- PANTALLA COMPLETA ---------- */
+function tryFullscreen(){
+  const e=document.documentElement;
+  const f=e.requestFullscreen||e.webkitRequestFullscreen||e.msRequestFullscreen;
+  if(f && !document.fullscreenElement){ try{f.call(e)}catch(err){} }
+}
+
+/* ---------- INACTIVIDAD (auto-reset del kiosco) ---------- */
+let idleT;
+function resetIdle(){
+  clearTimeout(idleT);
+  if(current==='s-attract') return;
+  idleT=setTimeout(()=>{ if(current!=='s-attract') hardReset(); }, 120000);
+}
+['click','touchstart','keydown','mousemove'].forEach(ev=>addEventListener(ev,resetIdle,{passive:true}));
+
+function hardReset(){
+  S.kpi={q:50,c:50,r:50,s:50}; S.case=0; S.step=1; S.role=null; S.analysisHits=0; S.picked=[];
+  renderKPIs(); renderSteps(); $('#ov').classList.remove('on');
+  go('s-attract');
+}
+
+/* ---------- EVENTOS ---------- */
+$('#s-attract').addEventListener('click',()=>{ tryFullscreen(); beep('ok'); go('s-howto'); });
+$('#goRole').addEventListener('click',()=>{beep('tap');go('s-role')});
+$('#goAnalyze').addEventListener('click',()=>{beep('tap');buildAnalyze()});
+$('#goDecide').addEventListener('click',()=>{beep('tap');buildDecide()});
+$('#goNext').addEventListener('click',()=>{
+  beep('tap');
+  if(S.case===CASES.length-1) buildFinal(); else startCase(S.case+1);
+});
+$('#againBtn').addEventListener('click',()=>{beep('tap');hardReset()});
+$('#reviewBtn').addEventListener('click',openLessons);
+$('#btnHelp').addEventListener('click',openHelp);
+$('#btnHome').addEventListener('click',hardReset);
+$('#btnSound').addEventListener('click',()=>{
+  S.sound=!S.sound;
+  $('#sndIco').innerHTML = S.sound
+    ? '<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6"/><path d="M18.6 6.6a7.6 7.6 0 0 1 0 10.8"/>'
+    : '<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M16.5 9.5l4 5M20.5 9.5l-4 5"/>';
+  if(S.sound) beep('ok');
+  toast(S.sound?'Sonido activado':'Sonido silenciado');
+});
+$('#ov').addEventListener('click',e=>{if(e.target.id==='ov')$('#ov').classList.remove('on')});
+addEventListener('keydown',e=>{
+  if(e.key==='Escape') $('#ov').classList.remove('on');
+  if(e.key==='F1'){e.preventDefault();openHelp()}
+  if(e.key==='r'&&e.ctrlKey){e.preventDefault();hardReset()}
+});
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* ---------- INIT ---------- */
+buildKPIs(); buildRoles(); renderKPIs(); renderSteps();
+$('#s-attract').classList.add('on');
+</script>
+</body>
+</html>
